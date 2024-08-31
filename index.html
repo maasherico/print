@@ -20,22 +20,22 @@
             max-width: 1000px;
             padding: 20px;
         }
-        .result { 
+        .result {
             margin-top: 20px; 
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
+            line-height: 1.2; /* Adjust line height for spacing */
         }
-        .batch, .date {
-            font-size: 135px; /* Font size for batch and date */
-            font-weight: bold;
-            line-height: 1.2;
+        .batch, .expiry { 
+            font-size: 135px; /* Batch and Expiry Date size */
+            font-weight: bold; /* Bold text */
+            word-wrap: break-word; /* Wrap long text */
         }
         .best-before {
-            font-size: 100px; /* Font size for "BEST BEFORE" */
-            font-weight: bold;
-            margin: 10px 0;
+            font-size: 100px; /* "BEST BEFORE" text size */
+            font-weight: bold; /* Bold text */
         }
         input, button { 
             font-size: 20px; 
@@ -122,7 +122,7 @@
                 resultDiv.innerHTML = `
                     <div class="batch">${batch}</div>
                     <div class="best-before">BEST BEFORE</div>
-                    <div class="date">${expiryDate}</div>
+                    <div class="expiry">${expiryDate}</div>
                 `;
             } else {
                 resultDiv.innerHTML = 'Batch not found.';
