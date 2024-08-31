@@ -32,10 +32,12 @@
             font-size: 12vw; /* Adjust size to fit the width of the screen */
             font-weight: bold; /* Bold text */
             word-wrap: break-word; /* Wrap long text */
+            text-transform: uppercase; /* Convert text to uppercase */
         }
         .best-before {
             font-size: 8vw; /* Smaller size for "BEST BEFORE" text */
             font-weight: bold; /* Bold text */
+            text-transform: uppercase; /* Convert text to uppercase */
         }
         input, button { 
             font-size: 20px; 
@@ -84,7 +86,7 @@
                 if (!line.trim()) return;
 
                 // Split by comma and handle extra commas or spaces
-                const [batch, expiry] = line.split(',').map(item => item.trim());
+                const [batch, expiry] = line.split(',').map(item => item.trim().toUpperCase()); // Convert to uppercase
                 if (batch && expiry) {
                     batchData[batch] = expiry;
                 }
@@ -111,7 +113,7 @@
         }
 
         async function searchBatch() {
-            const batch = document.getElementById('batchInput').value.trim();
+            const batch = document.getElementById('batchInput').value.trim().toUpperCase(); // Convert to uppercase
             const resultDiv = document.getElementById('result');
 
             if (!batch) {
@@ -137,7 +139,7 @@
         }
 
         function addBatch() {
-            const newBatch = prompt('Enter the batch number:').trim();
+            const newBatch = prompt('Enter the batch number:').trim().toUpperCase(); // Convert to uppercase
             if (!newBatch) {
                 alert('Batch number cannot be empty.');
                 return;
