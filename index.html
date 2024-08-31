@@ -22,14 +22,20 @@
         }
         .result { 
             margin-top: 20px; 
-            font-size: 100px; /* Large font size */
-            font-weight: bold; /* Bold text */
-            line-height: 1.2; /* Adjust line height for spacing */
-            word-wrap: break-word; /* Wrap long text */
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
+        }
+        .batch, .date {
+            font-size: 135px; /* Font size for batch and date */
+            font-weight: bold;
+            line-height: 1.2;
+        }
+        .best-before {
+            font-size: 100px; /* Font size for "BEST BEFORE" */
+            font-weight: bold;
+            margin: 10px 0;
         }
         input, button { 
             font-size: 20px; 
@@ -114,9 +120,9 @@
             if (parsedData[batch]) {
                 const expiryDate = formatDate(parsedData[batch]);
                 resultDiv.innerHTML = `
-                    ${batch}<br>
-                    BEST BEFORE<br>
-                    ${expiryDate}
+                    <div class="batch">${batch}</div>
+                    <div class="best-before">BEST BEFORE</div>
+                    <div class="date">${expiryDate}</div>
                 `;
             } else {
                 resultDiv.innerHTML = 'Batch not found.';
