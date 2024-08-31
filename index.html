@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Search</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        .container { 
+            width: 100%;
+            max-width: 1000px;
+            padding: 20px;
+        }
+        .result { 
+            margin-top: 20px; 
+            font-size: 100px; /* Large font size */
+            font-weight: bold; /* Bold text */
+            line-height: 1.2; /* Adjust line height for spacing */
+            word-wrap: break-word; /* Wrap long text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        input, button { 
+            font-size: 20px; 
+            padding: 10px; 
+            margin: 10px;
+        }
+        @media print {
+            .no-print { display: none; }
+            .result { 
+                display: block; 
+                margin: 0; 
+                padding: 0; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="no-print">Batch Expiry Date Search</h1>
+        <input type="text" id="batchInput" placeholder="Enter batch number" class="no-print">
+        <button class="no-print" onclick="searchBatch()">Search</button>
+        <button class="no-print" onclick="window.print()">Print Result</button>
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        const sheetUrl = 'https://docs.google.com/spreadsheets/d/1iKAc8QdHAQqJ1OdT8SZv08pGiba5CDnryfoT7PIf7E4/pub?output=csv'; // Your updated published sheet URL
+
+        async function fetchData() {
+            const response = await fetch(sheetUrl);
+            const data = await response.text();
+            return data;
+        }
+
+        function parseData(data) {
+            const lines = data.split('\n');
+            const result = {};
+            lines.forEach(line => {
+                // Skip empty lines
+                if (!line.trim()) return;
+
+                // Split by comma and handle extra commas or spaces
+                const [batch, expiry] = line.split(',').map(item => item.trim());
+                if (batch && expiry) {
+                    result[batch] = expiry;
+                }
+            });
+            return result;
+        }
+
+        function formatDate(dateStr) {
+            // Handle 'yyyy-mm-dd' format
+            const ymdParts = dateStr.split('-');
+            if (ymdParts.length === 3) {
+                const [year, month, day] = ymdParts;
+                return `${day}/${month}/${year}`;
+            }
+
+            // Handle 'mm/dd/yyyy' format
+            const mdyParts = dateStr.split('/');
+            if (mdyParts.length === 3 && mdyParts[0].length === 2 && mdyParts[1].length === 2) {
+                const [month, day, year] = mdyParts;
+                return `${day}/${month}/${year}`;
+            }
+
+            // Return original string if format is not recognized
+            return dateStr;
+        }
+
+        async function searchBatch() {
+            const batch = document.getElementById('batchInput').value.trim();
+            const resultDiv = document.getElementById('result');
+
+            if (!batch) {
+                resultDiv.innerHTML = 'Please enter a batch number.';
+                return;
+            }
+
+            const data = await fetchData();
+            const parsedData = parseData(data);
+
+            if (parsedData[batch]) {
+                const expiryDate = formatDate(parsedData[batch]);
+                resultDiv.innerHTML = `
+                    ${batch}<br>
+                    BEST BEFORE<br>
+                    ${expiryDate}
+                `;
+            } else {
+                resultDiv.innerHTML = 'Batch not found.';
+            }
+        }
+    </script>
+</body>
+</html>
