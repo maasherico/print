@@ -62,12 +62,14 @@
         <h1 class="no-print">Batch Expiry Date Search</h1>
         <input type="text" id="batchInput" placeholder="Enter batch number" class="no-print">
         <button class="no-print" onclick="searchBatch()">Search</button>
+        <button class="no-print" onclick="addBatch()">Add Batch</button>
         <button class="no-print" onclick="window.print()">Print Result</button>
         <div id="result" class="result"></div>
     </div>
 
     <script>
         const sheetUrl = 'https://docs.google.com/spreadsheets/d/1iKAc8QdHAQqJ1OdT8SZv08pGiba5CDnryfoT7PIf7E4/pub?output=csv'; // Your updated published sheet URL
+        let batchData = {};
 
         async function fetchData() {
             const response = await fetch(sheetUrl);
@@ -77,7 +79,6 @@
 
         function parseData(data) {
             const lines = data.split('\n');
-            const result = {};
             lines.forEach(line => {
                 // Skip empty lines
                 if (!line.trim()) return;
@@ -85,10 +86,9 @@
                 // Split by comma and handle extra commas or spaces
                 const [batch, expiry] = line.split(',').map(item => item.trim());
                 if (batch && expiry) {
-                    result[batch] = expiry;
+                    batchData[batch] = expiry;
                 }
             });
-            return result;
         }
 
         function formatDate(dateStr) {
@@ -119,11 +119,13 @@
                 return;
             }
 
-            const data = await fetchData();
-            const parsedData = parseData(data);
+            if (Object.keys(batchData).length === 0) {
+                const data = await fetchData();
+                parseData(data);
+            }
 
-            if (parsedData[batch]) {
-                const expiryDate = formatDate(parsedData[batch]);
+            if (batchData[batch]) {
+                const expiryDate = formatDate(batchData[batch]);
                 resultDiv.innerHTML = `
                     <div class="batch">${batch}</div>
                     <div class="best-before">BEST BEFORE</div>
@@ -132,6 +134,25 @@
             } else {
                 resultDiv.innerHTML = 'Batch not found.';
             }
+        }
+
+        function addBatch() {
+            const newBatch = prompt('Enter the batch number:').trim();
+            if (!newBatch) {
+                alert('Batch number cannot be empty.');
+                return;
+            }
+
+            const newExpiry = prompt('Enter the expiry date (format: dd/mm/yyyy or yyyy-mm-dd):').trim();
+            if (!newExpiry) {
+                alert('Expiry date cannot be empty.');
+                return;
+            }
+
+            // Add new batch to the batch data object
+            batchData[newBatch] = newExpiry;
+
+            alert(`Batch ${newBatch} with expiry date ${newExpiry} has been added.`);
         }
     </script>
 </body>
