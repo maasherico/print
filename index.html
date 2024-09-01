@@ -69,6 +69,9 @@
         <div id="result" class="result"></div>
     </div>
 
+    <!-- Include Moment.js for date parsing and formatting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+
     <script>
         const sheetUrl = 'https://docs.google.com/spreadsheets/d/1iKAc8QdHAQqJ1OdT8SZv08pGiba5CDnryfoT7PIf7E4/pub?output=csv'; // Your updated published sheet URL
         let batchData = {};
@@ -94,22 +97,9 @@
         }
 
         function formatDate(dateStr) {
-            // Handle 'yyyy-mm-dd' format
-            const ymdParts = dateStr.split('-');
-            if (ymdParts.length === 3) {
-                const [year, month, day] = ymdParts;
-                return `${day}/${month}/${year}`;
-            }
-
-            // Handle 'mm/dd/yyyy' format
-            const mdyParts = dateStr.split('/');
-            if (mdyParts.length === 3 && mdyParts[0].length === 2 && mdyParts[1].length === 2) {
-                const [month, day, year] = mdyParts;
-                return `${day}/${month}/${year}`;
-            }
-
-            // Return original string if format is not recognized
-            return dateStr;
+            // Try parsing using Moment.js
+            const date = moment(dateStr, ['YYYY-MM-DD', 'MM/DD/YYYY'], true);
+            return date.isValid() ? date.format('DD/MM/YYYY') : dateStr;
         }
 
         async function searchBatch() {
