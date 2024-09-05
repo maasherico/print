@@ -73,23 +73,27 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
 
     <script>
-        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQT64fdn4q95_dgrvJF7FwpG2GlaKBLAtJ3pahNCkmCcheoPcx1Up0enchSdjjfTRV5ev7bz8fqHTcI/pub?output=csv'; // Your updated published sheet URL
+        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQT64fdn4q95_dgrvJF7FwpG2GlaKBLAtJ3pahNCkmCcheoPcx1Up0enchSdjjfTRV5ev7bz8fqHTcI/pub?output=csv';
         let batchData = {};
 
         async function fetchData() {
-            const response = await fetch(sheetUrl);
-            const data = await response.text();
-            return data;
+            try {
+                const response = await fetch(sheetUrl);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.text();
+                return data;
+            } catch (error) {
+                console.error('There was a problem with the fetch operation:', error);
+                alert('Failed to fetch data. Please try again later.');
+            }
         }
 
         function parseData(data) {
             const lines = data.split('\n');
             lines.forEach(line => {
-                // Skip empty lines
                 if (!line.trim()) return;
 
-                // Split by comma and handle extra commas or spaces
-                const [batch, expiry] = line.split(',').map(item => item.trim().toUpperCase()); // Convert to uppercase
+                const [batch, expiry] = line.split(',').map(item => item.trim().toUpperCase());
                 if (batch && expiry) {
                     batchData[batch] = expiry;
                 }
@@ -97,14 +101,16 @@
         }
 
         function formatDate(dateStr) {
-            // Try parsing using Moment.js
-            const date = moment(dateStr, ['YYYY-MM-DD', 'MM/DD/YYYY'], true);
+            const formats = ['YYYY-MM-DD', 'MM/DD/YYYY', 'DD/MM/YYYY'];
+            const date = moment(dateStr, formats, true);
             return date.isValid() ? date.format('DD/MM/YYYY') : dateStr;
         }
 
         async function searchBatch() {
-            const batch = document.getElementById('batchInput').value.trim().toUpperCase(); // Convert to uppercase
             const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Loading...'; // Show loading text
+
+            const batch = document.getElementById('batchInput').value.trim().toUpperCase();
 
             if (!batch) {
                 resultDiv.innerHTML = 'Please enter a batch number.';
@@ -112,8 +118,7 @@
             }
 
             if (Object.keys(batchData).length === 0) {
-                const data = await fetchData();
-                parseData(data);
+                await fetchData().then(data => parseData(data)).catch(error => resultDiv.innerHTML = 'Failed to fetch data.');
             }
 
             if (batchData[batch]) {
@@ -128,8 +133,19 @@
             }
         }
 
+        function saveToLocalStorage() {
+            localStorage.setItem('batchData', JSON.stringify(batchData));
+        }
+
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('batchData');
+            if (savedData) {
+                batchData = JSON.parse(savedData);
+            }
+        }
+
         function addBatch() {
-            const newBatch = prompt('Enter the batch number:').trim().toUpperCase(); // Convert to uppercase
+            const newBatch = prompt('Enter the batch number:').trim().toUpperCase();
             if (!newBatch) {
                 alert('Batch number cannot be empty.');
                 return;
@@ -141,11 +157,14 @@
                 return;
             }
 
-            // Add new batch to the batch data object
             batchData[newBatch] = newExpiry;
+            saveToLocalStorage();
 
             alert(`Batch ${newBatch} with expiry date ${newExpiry} has been added.`);
         }
+
+        // Call loadFromLocalStorage on page load
+        window.onload = loadFromLocalStorage;
     </script>
 </body>
 </html>
