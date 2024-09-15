@@ -19,6 +19,7 @@
             width: 100%;
             max-width: 1000px;
             padding: 20px;
+            position: relative;
         }
         .result {
             margin-top: 20px; 
@@ -44,6 +45,24 @@
             padding: 10px; 
             margin: 10px;
         }
+        .suggestions {
+            border: 1px solid #ddd;
+            border-top: none;
+            position: absolute;
+            background: white;
+            width: 100%;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1;
+        }
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .suggestion-item:hover {
+            background-color: #f0f0f0;
+        }
         @media print {
             .no-print { display: none; }
             .result { 
@@ -62,7 +81,8 @@
 <body>
     <div class="container">
         <h1 class="no-print">Batch Expiry Date Search</h1>
-        <input type="text" id="batchInput" placeholder="Enter batch number" class="no-print">
+        <input type="text" id="batchInput" placeholder="Enter batch number" class="no-print" oninput="showSuggestions()">
+        <div id="suggestions" class="suggestions"></div>
         <button class="no-print" onclick="searchBatch()">Search</button>
         <button class="no-print" onclick="addBatch()">Add Batch</button>
         <button class="no-print" onclick="window.print()">Print Result</button>
@@ -75,6 +95,7 @@
     <script>
         const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQT64fdn4q95_dgrvJF7FwpG2GlaKBLAtJ3pahNCkmCcheoPcx1Up0enchSdjjfTRV5ev7bz8fqHTcI/pub?output=csv';
         let batchData = {};
+        let suggestionsDiv = document.getElementById('suggestions');
 
         async function fetchData() {
             try {
@@ -161,6 +182,30 @@
             saveToLocalStorage();
 
             alert(`Batch ${newBatch} with expiry date ${newExpiry} has been added.`);
+        }
+
+        function showSuggestions() {
+            const input = document.getElementById('batchInput').value.toUpperCase();
+            suggestionsDiv.innerHTML = '';
+            if (!input) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+
+            const filteredBatches = Object.keys(batchData).filter(batch => batch.startsWith(input));
+            filteredBatches.forEach(batch => {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.textContent = batch;
+                div.onclick = () => {
+                    document.getElementById('batchInput').value = batch;
+                    suggestionsDiv.innerHTML = '';
+                    suggestionsDiv.style.display = 'none';
+                };
+                suggestionsDiv.appendChild(div);
+            });
+
+            suggestionsDiv.style.display = filteredBatches.length > 0 ? 'block' : 'none';
         }
 
         // Call loadFromLocalStorage on page load
