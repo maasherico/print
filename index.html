@@ -103,7 +103,8 @@
                 const response = await fetch(sheetUrl);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.text();
-                return data;
+                parseData(data);
+                saveToLocalStorage(); // Save the fetched data to localStorage
             } catch (error) {
                 console.error('There was a problem with the fetch operation:', error);
                 alert('Failed to fetch data. Please try again later.');
@@ -140,7 +141,7 @@
             }
 
             if (Object.keys(batchData).length === 0) {
-                await fetchData().then(data => parseData(data)).catch(error => resultDiv.innerHTML = 'Failed to fetch data.');
+                await fetchData();
             }
 
             if (batchData[batch]) {
@@ -209,8 +210,13 @@
             suggestionsDiv.style.display = filteredBatches.length > 0 ? 'block' : 'none';
         }
 
-        // Call loadFromLocalStorage on page load
-        window.onload = loadFromLocalStorage;
+        // Call loadFromLocalStorage and fetchData on page load
+        window.onload = async () => {
+            loadFromLocalStorage();
+            if (Object.keys(batchData).length === 0) {
+                await fetchData();
+            }
+        };
     </script>
 </body>
 </html>
