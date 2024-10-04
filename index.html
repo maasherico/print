@@ -113,12 +113,19 @@
 
         function parseData(data) {
             const lines = data.split('\n');
-            lines.forEach(line => {
-                if (!line.trim()) return;
+            const headers = lines[0].split(','); // Get headers without transforming case
+            const batchIndex = headers.indexOf('Batch Number'); // Get index for batch number
+            const expiryIndex = headers.indexOf('Expiry Date'); // Get index for expiry date
 
-                const [batch, expiry] = line.split(',').map(item => item.trim().toUpperCase());
+            lines.slice(1).forEach(line => {
+                if (!line.trim()) return; // Skip empty lines
+                const values = line.split(',').map(item => item.trim());
+                
+                const batch = values[batchIndex];
+                const expiry = values[expiryIndex];
+
                 if (batch && expiry) {
-                    batchData[batch] = expiry;
+                    batchData[batch.toUpperCase()] = expiry; // Store batch in uppercase
                 }
             });
         }
