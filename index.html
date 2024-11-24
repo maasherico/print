@@ -27,18 +27,18 @@
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            line-height: 1.2; /* Adjust line height for spacing */
+            line-height: 1.2;
         }
         .batch, .expiry { 
-            font-size: 12vw; /* Adjust size to fit the width of the screen */
-            font-weight: bold; /* Bold text */
-            word-wrap: break-word; /* Wrap long text */
-            text-transform: uppercase; /* Convert text to uppercase */
+            font-size: 12vw; 
+            font-weight: bold; 
+            word-wrap: break-word;
+            text-transform: uppercase; 
         }
         .best-before {
-            font-size: 8vw; /* Smaller size for "BEST BEFORE" text */
-            font-weight: bold; /* Bold text */
-            text-transform: uppercase; /* Convert text to uppercase */
+            font-size: 8vw; 
+            font-weight: bold; 
+            text-transform: uppercase; 
         }
         input, button { 
             font-size: 20px; 
@@ -50,12 +50,12 @@
             border-top: none;
             position: absolute;
             background: white;
-            width: calc(100% - 20px); /* Adjust width */
+            width: calc(100% - 20px); 
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
             max-height: 150px;
             overflow-y: auto;
             z-index: 1;
-            display: none; /* Hide initially */
+            display: none; 
         }
         .suggestion-item {
             padding: 10px;
@@ -72,7 +72,6 @@
                 padding: 0; 
             }
         }
-        /* Force landscape orientation when printing */
         @page {
             size: landscape;
             margin: 0;
@@ -90,21 +89,32 @@
         <div id="result" class="result"></div>
     </div>
 
-    <!-- Include Moment.js for date parsing and formatting -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
     <script>
-        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQT64fdn4q95_dgrvJF7FwpG2GlaKBLAtJ3pahNCkmCcheoPcx1Up0enchSdjjfTRV5ev7bz8fqHTcI/pub?output=csv';
+        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRAzOvdXZBEKVUUlJAdxqInvKTeCdETp6sm7SHVRjAh_0hwzO8XwIlQMRIHwOnXBEIVNjzwjjN5xsvE/pub?output=csv';
         let batchData = {};
         let suggestionsDiv = document.getElementById('suggestions');
 
         async function fetchData() {
             try {
                 const response = await fetch(sheetUrl);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const data = await response.text();
-                parseData(data);
-                saveToLocalStorage(); // Save the fetched data to localStorage
+                if (!response.ok) throw new Error('Failed to fetch CSV');
+                const csvData = await response.text();
+
+                Papa.parse(csvData, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function (result) {
+                        parseData(result.data);
+                        saveToLocalStorage();
+                    },
+                    error: function (error) {
+                        console.error('Error parsing CSV:', error);
+                        alert('Failed to parse data.');
+                    }
+                });
             } catch (error) {
                 console.error('There was a problem with the fetch operation:', error);
                 alert('Failed to fetch data. Please try again later.');
@@ -112,20 +122,12 @@
         }
 
         function parseData(data) {
-            const lines = data.split('\n');
-            const headers = lines[0].split(','); // Get headers without transforming case
-            const batchIndex = headers.indexOf('Batch Number'); // Get index for batch number
-            const expiryIndex = headers.indexOf('Expiry Date'); // Get index for expiry date
-
-            lines.slice(1).forEach(line => {
-                if (!line.trim()) return; // Skip empty lines
-                const values = line.split(',').map(item => item.trim());
-                
-                const batch = values[batchIndex];
-                const expiry = values[expiryIndex];
-
+            batchData = {};
+            data.forEach(row => {
+                const batch = row['Batch Number']?.toUpperCase();
+                const expiry = row['Expiry Date'];
                 if (batch && expiry) {
-                    batchData[batch.toUpperCase()] = expiry; // Store batch in uppercase
+                    batchData[batch] = expiry;
                 }
             });
         }
@@ -138,7 +140,7 @@
 
         async function searchBatch() {
             const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = 'Loading...'; // Show loading text
+            resultDiv.innerHTML = 'Loading...';
 
             const batch = document.getElementById('batchInput').value.trim().toUpperCase();
 
@@ -217,7 +219,6 @@
             suggestionsDiv.style.display = filteredBatches.length > 0 ? 'block' : 'none';
         }
 
-        // Call loadFromLocalStorage and fetchData on page load
         window.onload = async () => {
             loadFromLocalStorage();
             if (Object.keys(batchData).length === 0) {
